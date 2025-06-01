@@ -1,0 +1,50 @@
+server:
+  port: ${respiratory.service.port}
+
+spring:
+  profiles:
+    active: local
+  application:
+    name: ${respiratory.service.name}
+  main:
+    # 允许循环依赖
+    allow-circular-references: true
+  cloud:
+    nacos:
+      server-addr: ${respiratory.nacos.host}:8848
+      discovery:
+        cluster-name: "FuZhou"
+        namespace: 47c88cd1-8fcb-4922-ae8d-f67e979256bc
+dubbo:
+  application:
+    name: dubbo-${spring.application.name} # 需要唯一
+    parameters[namespace]: ${spring.cloud.nacos.discovery.namespace}
+    parameters[group]: DUBBO
+  # 注册中心
+  registry:
+    address: nacos://${spring.cloud.nacos.server-addr}
+  # 包扫描
+  scan:
+    base-packages:
+      - ${respiratory.service.dubbo.web-earn-scan}
+      - ${respiratory.service.dubbo.service-impl-scan}
+  protocol:
+    name: dubbo
+    port: -1
+
+respiratory:
+  service:
+    port: 8088
+    name: follow-up-service
+    base: org.harvey.respiratory.cloud.fu.server
+    scan:
+      controller: ${respiratory.service.base}.controller
+      service-impl: ${respiratory.service.base}.service.impl
+    doc:
+      name: ${respiratory.service.name}
+      description: 随访服务
+    dao:
+      database: cr_follow_up
+    dubbo:
+      service-impl-scan: ${respiratory.service.scan.service-impl}
+      web-earn-scan: ${respiratory.service.scan.controller}

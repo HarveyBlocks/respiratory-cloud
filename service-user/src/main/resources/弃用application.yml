@@ -1,0 +1,111 @@
+server:
+  port: ${respiratory.service.port}
+spring:
+  profiles:
+    active: local
+  application:
+    name: ${respiratory.service.name}
+  main:
+    # 允许循环依赖
+    allow-circular-references: true
+  cloud:
+    nacos:
+      server-addr: ${respiratory.nacos.host}:8848
+      discovery:
+        server-addr: ${respiratory.nacos.host}:8848
+        cluster-name: "FuZhou"
+        group: ${respiratory.service.discovery.group}
+        namespace: 47c88cd1-8fcb-4922-ae8d-f67e979256bc
+  datasource:
+    #    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      url: jdbc:mysql://${respiratory.db.host}:3306/${respiratory.service.dao.database}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      username: root
+      password: ${respiratory.db.password}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+  redis:
+    host: ${respiratory.redis.host}
+    port: 6379
+    password: ${respiratory.redis.password}
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 10
+        min-idle: 1
+        time-between-eviction-runs: 10s
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+  # 在common上了, 这样很不好
+  type-aliases-package: org.harvey.respiratory.cloud.common.pojo.entity
+
+
+logging:
+  level:
+    org.harvey.respiratory.cloud: debug
+  pattern:
+    date-format: HH:mm:ss:SSS
+
+dubbo:
+  application:
+    name: ${spring.application.name} # 需要唯一
+  # 注册中心
+  registry:
+    address: nacos://${spring.cloud.nacos.discovery.server-addr}
+  # 包扫描
+  scan:
+    base-packages:
+      - ${respiratory.service.dubbo.web-earn-scan}
+      - ${respiratory.service.dubbo.service-impl-scan}
+
+knife4j:
+  enable: true
+  openapi:
+    title: database-practice.${respiratory.service.doc.name}
+    description: 医疗系统-${respiratory.service.doc.description}
+    email: harvey.blocks@outlook.com
+    concat: Harvey Blocks
+    url: https://www.baidu.com
+    version: v1.0.0
+    group:
+      default:
+        group-name: default
+        api-rule: package
+        api-rule-resources:
+          - ${respiratory.service.scan.controller}
+
+# user-security配置
+respiratory:
+  # jwt设置
+  jwt:
+    location: classpath:respiratory-cloud.jks
+    alias: respiratory
+    password: ${respiratory.jwt.jks.password} # 解析文件的密钥(文件本身也是密钥)
+    tokenTTL: ${respiratory.jwt.jks.tokenTTL}
+  identity-card:
+    open-code-verify: ${respiratory.identity-card.open-code-verify}
+    city-sorted: ${respiratory.identity-code.open-code-verify}
+  service:
+    port: 8081
+    name: user-service
+    scan:
+      controller: org.harvey.respiratory.cloud.user.server.controller
+      service-impl: org.harvey.respiratory.cloud.user.server.service.impl
+    dao:
+      database: cr_user
+    doc:
+      name: ${respiratory.service.name}
+      description: 用户服务
+    discovery:
+      group: "SECURITY"
+    dubbo:
+      service-impl-scan: ${respiratory.service.scan.service-impl}
+      web-earn-scan: ${respiratory.service.scan.controller}

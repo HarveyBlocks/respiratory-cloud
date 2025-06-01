@@ -1,0 +1,3 @@
+respiratory:
+  nacos:
+    host: nacos
