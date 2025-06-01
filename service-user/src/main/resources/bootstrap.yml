@@ -1,0 +1,19 @@
+spring:
+  profiles:
+    active: local
+  cloud:
+    nacos:
+      server-addr: ${respiratory.nacos.host}:8848
+      config:
+        file-extension: yaml
+        shared-configs:
+          - data-id: respiratory-user-security.yaml
+            group: SECURITY
+          - data-id: api-knife4j.yaml
+            group: BASE_GROUP
+          - data-id: logging.yaml
+            group: BASE_GROUP
+          - data-id: dao-druid-mp.yaml
+            group: BASE_GROUP
+          - data-id: redis.yaml
+            group: BASE_GROUP
