@@ -46,8 +46,10 @@ build/
 
 
 ### properties ###
-*-dev.yml
-*-local.yml
+application-dev.yml
+application-local.yml
+bootstrap-local.yml
+bootstrap-dev.yml
 
 ### safe ###
 *.jks
@@ -57,3 +59,4 @@ build/
 *.json
 *.png
 *.log
+*.xdb
