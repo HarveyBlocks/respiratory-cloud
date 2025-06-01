@@ -46,10 +46,10 @@ build/
 
 
 ### properties ###
-**/application-dev.yml
-**/application-local.yml
-**/bootstrap-local.yml
-**/bootstrap-dev.yml
+application-dev.yml
+application-local.yml
+bootstrap-local.yml
+bootstrap-dev.yml
 
 ### safe ###
 *.jks
