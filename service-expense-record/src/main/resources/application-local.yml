@@ -1,0 +1,12 @@
+respiratory:
+  db:
+    host: cloud.respiratory
+    password: 123
+  redis:
+    host: cloud.respiratory
+    password: 123456
+  es:
+    host: cloud.respiratory
+    port: 9200
+  nacos:
+    host: cloud.respiratory

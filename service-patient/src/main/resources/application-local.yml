@@ -1,0 +1,15 @@
+respiratory:
+  db:
+    host: cloud.respiratory
+    password: 123
+  redis:
+    host: cloud.respiratory
+    password: 123456
+  es:
+    host: cloud.respiratory
+    port: 9200
+  identity-card:
+    open-code-verify: false
+    city-sorted: service-role\src\main\resources\address_on_id.json
+  nacos:
+    host: cloud.respiratory
