@@ -42,7 +42,7 @@ public class InterviewDto implements Serializable {
     private String otherAdjuvantTherapy;
 
     @ApiModelProperty(value = "症状表, 可以为empty, 不可为null", required = true)
-    private List<SymptomaticPresentationDto> symptomaticPresentationList;
+    private List<InterviewSymptomaticPresentation> symptomaticPresentationList;
 
     @ApiModelProperty(value = "药物具体使用表, 可以为empty, 不可为null", required = true)
     private List<SpecificUsingDrugRecordDto> specificUsingDrugRecordDtoList;
@@ -112,9 +112,9 @@ public class InterviewDto implements Serializable {
     @NoArgsConstructor
     @AllArgsConstructor
     @ApiModel(description = "症状")
-    public static class SymptomaticPresentationDto {
-        @ApiModelProperty("名称(varchar(63))")
-        private String name;
+    public static class InterviewSymptomaticPresentation {
+        @ApiModelProperty("症状具体, 主键, int, 具体症状而不是症状表现!")
+        private Integer id;
 
         @ApiModelProperty("严重程度(enum-轻度/中度/重度)")
         private Severity severity;
@@ -139,7 +139,7 @@ public class InterviewDto implements Serializable {
         private String description;
 
         public SymptomaticPresentation buildSymptomaticPresentation(long visitDoctorId) {
-            return new SymptomaticPresentation(null, visitDoctorId, name, severity, frequency, startTime, incentive,
+            return new SymptomaticPresentation(null, visitDoctorId, id, severity, frequency, startTime, incentive,
                     environmentalFactor, signDescription, description,
                     ConstantsInitializer.nowDateTime(), false, null
             );

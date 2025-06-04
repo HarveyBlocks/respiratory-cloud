@@ -1,0 +1,12 @@
+respiratory:
+  db:
+    host: mysql
+    password: 123
+  redis:
+    host: redis
+    password: 123456
+  es:
+    host: es
+    port: 9200
+  nacos:
+    host: nacos

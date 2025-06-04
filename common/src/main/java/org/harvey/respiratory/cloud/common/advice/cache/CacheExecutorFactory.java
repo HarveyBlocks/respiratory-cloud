@@ -1,10 +1,9 @@
 package org.harvey.respiratory.cloud.common.advice.cache;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.harvey.respiratory.cloud.common.advice.cache.bind.CacheExecutorBind;
 import org.harvey.respiratory.cloud.common.advice.cache.bind.MultipleQueryBind;
 import org.harvey.respiratory.cloud.common.advice.cache.executor.*;
-import org.harvey.respiratory.cloud.common.constants.KeyGenerator;
-import org.harvey.respiratory.cloud.common.constants.RedisConstants;
 import org.harvey.respiratory.cloud.common.utils.JacksonUtil;
 import org.harvey.respiratory.cloud.common.utils.RandomUtil;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -28,15 +27,14 @@ public class CacheExecutorFactory {
     private final CacheExecutorBind cacheExecutorBind;
 
     public CacheExecutorFactory(
-            StringRedisTemplate stringRedisTemplate,
-            JacksonUtil jacksonUtil,
-            RandomUtil randomUtil) {
+            StringRedisTemplate stringRedisTemplate, JacksonUtil jacksonUtil, RandomUtil randomUtil) {
         this.cacheExecutorBind = new CacheExecutorBind(stringRedisTemplate, jacksonUtil, randomUtil);
     }
 
 
-    public <T> SingleCacheExecutor<T> onValue(String key, Supplier<T> slowSupplier, boolean updateExpire) {
-        return new ValueCacheExecutor<>(cacheExecutorBind, slowSupplier, updateExpire, key);
+    public <T> SingleCacheExecutor<T> onValue(
+            String key, Supplier<T> slowSupplier, TypeReference<T> typeReference, boolean updateExpire) {
+        return new ValueCacheExecutor<>(cacheExecutorBind, slowSupplier, typeReference, updateExpire, key);
     }
 
 

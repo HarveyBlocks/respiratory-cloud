@@ -1,5 +1,6 @@
 package org.harvey.respiratory.cloud.common.advice.cache.executor;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.AllArgsConstructor;
 import org.harvey.respiratory.cloud.common.advice.cache.CacheSaveUnit;
 import org.harvey.respiratory.cloud.common.advice.cache.bind.CacheExecutorBind;
@@ -19,8 +20,10 @@ import java.util.function.Supplier;
 public class ValueCacheExecutor<T> implements SingleCacheExecutor<T> {
     private final CacheExecutorBind cacheExecutorBind;
     private final Supplier<T> slowQuery;
+    private TypeReference<? extends T> typeReference;
     private final boolean updateExpire;
     private final String key;
+
 
     @Override
     public String fastGet() {
@@ -51,7 +54,7 @@ public class ValueCacheExecutor<T> implements SingleCacheExecutor<T> {
 
     @Override
     public T toBean(String json) {
-        return cacheExecutorBind.toBean(json);
+        return cacheExecutorBind.toBean(json, typeReference);
     }
 
 }

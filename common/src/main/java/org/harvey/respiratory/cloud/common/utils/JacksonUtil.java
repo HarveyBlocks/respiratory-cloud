@@ -66,16 +66,16 @@ public class JacksonUtil {
             throw new RuntimeException(e);
         }
     }
-    public <T> T toBean(String json) {
+
+    public <T> T toBean(String json, TypeReference<T> typeReference) {
         try {
-            return mapper.readValue(json, new TypeReference<T>() {
-            });
+            return mapper.readValue(json, typeReference);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public <T> T[] toBeanArray(String arrayJson, Class<T[]> type) {
+    public <T> T[] toBeanArray(String arrayJson, TypeReference<T[]> type) {
         try {
             return mapper.readValue(arrayJson, type);
         } catch (IOException e) {
@@ -83,10 +83,9 @@ public class JacksonUtil {
         }
     }
 
-    public <T> List<T> toBeanList(String listJson) {
+    public <T> List<T> toBeanList(String listJson, TypeReference<? extends List<T>> typeReference) {
         try {
-            return mapper.readValue(listJson, new TypeReference<>() {
-            });
+            return mapper.readValue(listJson, typeReference);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

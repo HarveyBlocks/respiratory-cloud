@@ -54,10 +54,10 @@ public class SymptomaticPresentation implements Serializable {
     @ApiModelProperty(value = "就诊号/就诊表id")
     private Long visitDoctorId;
     /**
-     * 名称(varchar(63))
+     * 具体的症状的id(int)
      */
-    @ApiModelProperty(value = "名称(varchar(63))")
-    private String name;
+    @ApiModelProperty(value = "具体的症状的id(int)")
+    private Integer detailId;
 
     /**
      * 严重程度(enum-轻度/中度/重度)
@@ -121,8 +121,8 @@ public class SymptomaticPresentation implements Serializable {
     }
 
     public void updateFromOldVersionIgnoreNull(SymptomaticPresentation old) {
-        if (this.getName() == null) {
-            this.setName(old.getName());
+        if (this.getDetailId() == null) {
+            this.setDetailId(old.getDetailId());
         }
         if (this.getSeverity() == null) {
             this.setSeverity(old.getSeverity());

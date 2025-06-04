@@ -1,6 +1,8 @@
 package org.harvey.respiratory.cloud.common.advice.cache.executor;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 
 /**
@@ -11,5 +13,8 @@ import java.io.Serializable;
  * @date 2025-05-31 16:23
  */
 public interface QueryBasisHaving<B extends Serializable> {
+
+    @JsonIgnore
     B getQueryBasis();
+
 }

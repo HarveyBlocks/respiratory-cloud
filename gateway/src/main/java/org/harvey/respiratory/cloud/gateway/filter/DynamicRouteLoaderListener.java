@@ -3,6 +3,7 @@ package org.harvey.respiratory.cloud.gateway.filter;
 import com.alibaba.cloud.nacos.NacosConfigManager;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.exception.NacosException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.harvey.respiratory.cloud.common.utils.JacksonUtil;
 import org.springframework.cloud.gateway.route.RouteDefinition;
@@ -63,7 +64,8 @@ public class DynamicRouteLoaderListener {
         // 1.反序列化
         List<RouteDefinition> routeDefinitions;
         if (configInfo != null) {
-            routeDefinitions = jacksonUtil.toBeanList(configInfo);
+            routeDefinitions = jacksonUtil.toBeanList(configInfo, new TypeReference<>() {
+            });
         } else {
             routeDefinitions = null;
         }

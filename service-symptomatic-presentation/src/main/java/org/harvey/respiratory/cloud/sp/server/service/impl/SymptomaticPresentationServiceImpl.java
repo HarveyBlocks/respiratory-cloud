@@ -4,23 +4,25 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.harvey.respiratory.cloud.api.service.MedicalProviderService;
-import org.harvey.respiratory.cloud.api.service.SymptomaticPresentationService;
-import org.harvey.respiratory.cloud.api.service.UserSecurityService;
-import org.harvey.respiratory.cloud.api.service.VisitDoctorService;
+import org.harvey.respiratory.cloud.api.service.*;
 import org.harvey.respiratory.cloud.common.exception.BadRequestException;
+import org.harvey.respiratory.cloud.common.exception.DaoException;
 import org.harvey.respiratory.cloud.common.exception.ResourceNotFountException;
 import org.harvey.respiratory.cloud.common.exception.UnauthorizedException;
+import org.harvey.respiratory.cloud.common.pojo.dto.SymptomaticPresentationDto;
 import org.harvey.respiratory.cloud.common.pojo.dto.UserSecurityDto;
 import org.harvey.respiratory.cloud.common.pojo.entity.MedicalProvider;
 import org.harvey.respiratory.cloud.common.pojo.entity.SymptomaticPresentation;
+import org.harvey.respiratory.cloud.common.pojo.entity.SymptomaticPresentationDetail;
 import org.harvey.respiratory.cloud.common.pojo.entity.VisitDoctor;
 import org.harvey.respiratory.cloud.sp.server.dao.SymptomaticPresentationMapper;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -54,8 +56,6 @@ public class SymptomaticPresentationServiceImpl extends
     public void logicDelete(Long targetId, String currentUserIdentityCardId) {
         SymptomaticPresentation symptomaticPresentation;
         try {
-
-
             symptomaticPresentation = queryByIdIgnoreDeleted(targetId);
         } catch (ResourceNotFountException e) {
             log.warn("用户{}想删除不存在的{}", currentUserIdentityCardId, targetId);
@@ -197,6 +197,32 @@ public class SymptomaticPresentationServiceImpl extends
                 .eq(SymptomaticPresentation::getVisitDoctorId, visitId)
                 .eq(SymptomaticPresentation::getDeleted, false)
                 .list();
+    }
+
+    @Resource
+    private SymptomaticPresentationDetailService symptomaticPresentationDetailService;
+
+    @Override
+    public List<SymptomaticPresentationDto> selectDtoByVisitId(Long visitId) {
+        List<SymptomaticPresentation> symptomaticPresentations = selectByVisitId(visitId);
+        // 查询实体
+        List<Integer> detailIds = symptomaticPresentations.stream()
+                .map(SymptomaticPresentation::getDetailId)
+                .collect(Collectors.toList());
+        // 查询类型
+        Map<Integer, SymptomaticPresentationDetail> detailMap = symptomaticPresentationDetailService.queryMapByIds(
+                detailIds);
+        // 合并
+        return symptomaticPresentations.stream().map(entity -> {
+            SymptomaticPresentationDetail detail = detailMap.get(entity.getDetailId());
+            if (detail == null) {
+                throw new DaoException(
+                        DaoException.Operation.FOREIGN_KEY,
+                        "不存在的外键依赖, 在tb_symptomatic_presentation的记录" + entity.getId() + "有误"
+                );
+            }
+            return new SymptomaticPresentationDto(entity, detail);
+        }).collect(Collectors.toList());
     }
 
 

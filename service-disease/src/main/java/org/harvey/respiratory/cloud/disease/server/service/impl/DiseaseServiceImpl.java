@@ -2,17 +2,18 @@ package org.harvey.respiratory.cloud.disease.server.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.harvey.respiratory.cloud.api.service.DiseaseDiagnosisIntermediationService;
 import org.harvey.respiratory.cloud.api.service.DiseaseService;
 import org.harvey.respiratory.cloud.common.advice.cache.MultiRedisCacheAdvice;
+import org.harvey.respiratory.cloud.common.advice.cache.PageRedisCacheAdvice;
 import org.harvey.respiratory.cloud.common.advice.cache.RedisCacheAdvice;
 import org.harvey.respiratory.cloud.common.advice.cache.bind.MultipleQueryBind;
-import org.harvey.respiratory.cloud.common.advice.cache.executor.QueryBasisHaving;
+import org.harvey.respiratory.cloud.common.advice.cache.bind.PageQueryBind;
+import org.harvey.respiratory.cloud.common.advice.cache.executor.ValueMultiCacheExecutor;
 import org.harvey.respiratory.cloud.common.constants.KeyGenerator;
 import org.harvey.respiratory.cloud.common.constants.RedisConstants;
 import org.harvey.respiratory.cloud.common.exception.BadRequestException;
@@ -22,9 +23,9 @@ import org.harvey.respiratory.cloud.common.exception.UnauthorizedException;
 import org.harvey.respiratory.cloud.common.pojo.dto.UserDto;
 import org.harvey.respiratory.cloud.common.pojo.entity.Disease;
 import org.harvey.respiratory.cloud.common.pojo.enums.Role;
+import org.harvey.respiratory.cloud.common.pojo.vo.BasisPage;
 import org.harvey.respiratory.cloud.common.utils.JacksonUtil;
 import org.harvey.respiratory.cloud.disease.server.dao.DiseaseMapper;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.LongStream;
 
 
 /**
@@ -51,44 +51,40 @@ import java.util.stream.LongStream;
 @NonNull
 @org.apache.dubbo.config.annotation.DubboService
 public class DiseaseServiceImpl extends ServiceImpl<DiseaseMapper, Disease> implements DiseaseService {
+
     @DubboReference
     private DiseaseDiagnosisIntermediationService diseaseDiagnosisIntermediationService;
-
     @Resource
     private RedisCacheAdvice redisCacheAdvice;
     @Resource
     private MultiRedisCacheAdvice multiRedisCacheAdvice;
+    @Resource
+    private PageRedisCacheAdvice pageRedisCacheAdvice;
+    private final PageQueryBind<Integer> selectByPageQueryBind;
     private final MultipleQueryBind<Integer, Disease> selectByIdsQueryBind;
-    private final MultipleQueryBind<Long, IntegerIdPage> selectByPageQueryBind;
+    private final TypeReference<Disease> typeReference = new TypeReference<>() {
+    };
 
-    public DiseaseServiceImpl() {
+    public DiseaseServiceImpl(DiseaseMapper diseaseMapper) {
         // selectByIdsQueryBind
-        KeyGenerator<Integer> selectByIdsKeyGenerator = KeyGenerator.<Integer>ofPrefix(RedisConstants.Disease.ON_ID)
-                .addPrefix(RedisConstants.QUERY_KEY_PREFIX);
-        selectByIdsQueryBind = new MultipleQueryBind<>(selectByIdsKeyGenerator, super::listByIds, true);
-
+        {
+            KeyGenerator<Integer> keyGenerator = KeyGenerator.<Integer>ofPrefix(RedisConstants.Disease.ON_ID)
+                    .addPrefix(RedisConstants.QUERY_KEY_PREFIX);
+            ValueMultiCacheExecutor.SlowQuery<Integer, Disease> slowQuery = super::listByIds;
+            boolean updateExpire = true;
+            selectByIdsQueryBind = new MultipleQueryBind<>(keyGenerator, slowQuery, updateExpire, typeReference);
+        }
         // selectByPageQueryBind
-        KeyGenerator<Long> objectKeyGenerator = KeyGenerator.<Long>ofPrefix(RedisConstants.Disease.ON_PAGE)
-                .addPrefix(RedisConstants.QUERY_KEY_PREFIX);
-        selectByPageQueryBind = new MultipleQueryBind<>(objectKeyGenerator,
-                this::selectIdsByPageSlow, false
-        );
+        {
+            KeyGenerator<Long> pageKeyGenerator = KeyGenerator.<Long>ofPrefix(RedisConstants.Disease.ON_PAGE)
+                    .addPrefix(RedisConstants.QUERY_KEY_PREFIX);
+            PageQueryBind.SlowQuery<Integer> slowQuery = diseaseMapper::selectIdsByPageBatch;
+            TypeReference<BasisPage<Integer>> idTypeReference = new TypeReference<>() {
+            };
+            selectByPageQueryBind = new PageQueryBind<>(pageKeyGenerator, slowQuery, idTypeReference);
+        }
     }
 
-    @NotNull
-    private List<IntegerIdPage> selectIdsByPageSlow(List<Long> redisCurrentList) {
-        return redisCurrentList.stream().map(current -> {
-            Page<Disease> page = new Page<>(current, RedisConstants.DEFAULT_LIMIT);
-            List<Integer> ids = super.lambdaQuery()
-                    .select(Disease::getId)
-                    .page(page)
-                    .getRecords()
-                    .stream()
-                    .map(Disease::getId)
-                    .collect(Collectors.toList());
-            return new IntegerIdPage(current, ids);
-        }).collect(Collectors.toList());
-    }
 
     @Override
     public void deleteById(int id) {
@@ -178,7 +174,8 @@ public class DiseaseServiceImpl extends ServiceImpl<DiseaseMapper, Disease> impl
                 // 不存在id的假数据
                 result.add(null);
             } else {
-                result.add(jacksonUtil.toBean(resultInCache));
+
+                result.add(jacksonUtil.toBean(resultInCache, typeReference));
             }
         }
         return result;
@@ -188,7 +185,9 @@ public class DiseaseServiceImpl extends ServiceImpl<DiseaseMapper, Disease> impl
     @NonNull
     public Disease selectById(int id) {
         String queryKey = RedisConstants.QUERY_KEY_PREFIX + RedisConstants.Disease.ON_ID + id;
-        Disease disease = redisCacheAdvice.adviceOnValue(queryKey, () -> super.getById(id)/*慢查询*/, true);
+        Disease disease = redisCacheAdvice.adviceOnValue(queryKey, () -> super.getById(id)/*慢查询*/, typeReference,
+                true
+        );
         if (disease != null) {
             return disease;
         } else {
@@ -196,53 +195,16 @@ public class DiseaseServiceImpl extends ServiceImpl<DiseaseMapper, Disease> impl
         }
     }
 
-    @AllArgsConstructor
-    @Data
-    private static class IntegerIdPage implements QueryBasisHaving<Long> {
-        private final Long current;
-        private final List<Integer> ids;
 
-        @Override
-        public Long getQueryBasis() {
-            return current;
-        }
-    }
 
     @Override
     @NonNull
     public List<Disease> selectByPage(Page<Disease> page) {
-        //  分页的缓存
-        long current = page.getCurrent();
-        long size = page.getSize();
-        long start = (current - 1) * size;
-        // 需要在缓存中定位的页
-        long redisCurrentStart = start / RedisConstants.DEFAULT_LIMIT + 1;
-        long redisCurrentEnd = (start + size) / RedisConstants.DEFAULT_LIMIT + 1;
-        // 需要查询的页码是...
-        // 包含两头的
-        List<Long> redisCurrentList = LongStream.range(redisCurrentStart, redisCurrentEnd + 1)
-                .boxed()
-                .collect(Collectors.toList());
-        // 获取到的页面集
-        List<IntegerIdPage> integerIdPageList = adviceOnRedisSelectByPageQueryBind(redisCurrentList);
-        // 需要的id
-        List<Integer> ids = integerIdPageList.stream()
-                .map(IntegerIdPage::getIds)
-                .flatMap(List::stream)
-                .skip(start - start / RedisConstants.DEFAULT_LIMIT * RedisConstants.DEFAULT_LIMIT)
-                .limit(size)
-                .collect(Collectors.toList());
+        // 缓存增强
+        List<Integer> ids = pageRedisCacheAdvice.advice(page, selectByPageQueryBind);
         return selectByIds(ids);
     }
 
-    private List<IntegerIdPage> adviceOnRedisSelectByPageQueryBind(List<Long> redisCurrentList) {
-        return multiRedisCacheAdvice.adviceOnValue(redisCurrentList, selectByPageQueryBind);
-    }
-
-    public static void main(String[] args) {
-        DiseaseServiceImpl diseaseService = new DiseaseServiceImpl();
-        diseaseService.selectByPage(new Page<>(12, 312));
-    }
 
     @Override
     @NonNull

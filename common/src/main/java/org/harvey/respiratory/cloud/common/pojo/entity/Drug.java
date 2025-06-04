@@ -44,6 +44,9 @@ public class Drug implements Serializable {
      */
     @ApiModelProperty("药物名称(varchar(63))")
     private String name;
+
+    @ApiModelProperty("治疗目标(varchar(255))")
+    private String treatTarget;
     /**
      * 药物单价, 单位, 分
      */

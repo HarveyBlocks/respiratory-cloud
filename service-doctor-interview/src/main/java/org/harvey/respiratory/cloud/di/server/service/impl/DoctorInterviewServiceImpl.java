@@ -66,11 +66,11 @@ public class DoctorInterviewServiceImpl implements DoctorInterviewService {
      */
     @NonNull
     private static List<SymptomaticPresentation> getSymptomaticPresentationList(
-            List<InterviewDto.SymptomaticPresentationDto> symptomaticPresentationDtoList, Long visitDoctorId) {
-        if (symptomaticPresentationDtoList == null) {
+            List<InterviewDto.InterviewSymptomaticPresentation> interviewSymptomaticPresentationList, Long visitDoctorId) {
+        if (interviewSymptomaticPresentationList == null) {
             throw new BadRequestException("symptomaticPresentationList 不能为null");
         }
-        return symptomaticPresentationDtoList.stream()
+        return interviewSymptomaticPresentationList.stream()
                 .map(sp -> sp.buildSymptomaticPresentation(visitDoctorId))
                 .collect(Collectors.toList());
     }

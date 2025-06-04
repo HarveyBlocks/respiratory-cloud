@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.harvey.respiratory.cloud.disease.server.dao.DiseaseMapper"><!--名字写代理接口-->
+
+    <resultMap id="IntegerIdPagePairMap" type="org.harvey.respiratory.cloud.common.pojo.vo.IntegerBasisPagePair">
+        <result property="id" column="id"/>
+        <result property="current" column="current_page" jdbcType="BIGINT"/>
+    </resultMap>
+
+
+    <select id="selectIdsByPageBatch" resultMap="IntegerIdPagePairMap">
+        <foreach collection="requests" item="req" separator="UNION ALL">
+            (select #{req.current} as current_page, id from tb_disease
+            LIMIT #{req.limit} OFFSET #{req.start} )
+        </foreach>
+    </select>
+</mapper>

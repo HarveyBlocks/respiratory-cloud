@@ -48,4 +48,6 @@ public class Disease implements Serializable, QueryBasisHaving<Integer> {
     public Integer getQueryBasis() {
         return id;
     }
+
+
 }

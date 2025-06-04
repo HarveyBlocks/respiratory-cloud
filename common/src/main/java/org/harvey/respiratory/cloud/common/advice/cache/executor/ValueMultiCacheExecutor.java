@@ -97,7 +97,7 @@ public class ValueMultiCacheExecutor<B extends Serializable, R extends QueryBasi
 
     @Override
     public R toBean(String json) {
-        return cacheExecutorBind.toBean(json);
+        return cacheExecutorBind.toBean(json, queryBind.getTypeReference());
     }
 
     private void expireTimes(Map<String, CacheSaveUnit> keyGeneratedMap) {

@@ -1,6 +1,7 @@
 package org.harvey.respiratory.cloud.common.advice.cache;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.harvey.respiratory.cloud.common.advice.cache.executor.SingleCacheExecutor;
 import org.harvey.respiratory.cloud.common.constants.RedisConstants;
@@ -38,17 +39,14 @@ public class RedisCacheAdvice extends AbstractRedisCacheAdvice {
     }
 
 
-    public <T> T adviceOnValue(String queryKey, Supplier<T> slowQuery, boolean updateExpire) {
+    public <T> T adviceOnValue(String queryKey, Supplier<T> slowQuery,
+            TypeReference<T> typeReference, boolean updateExpire) {
         String lockKey = RedisConstants.LOCK_KEY_PREFIX + queryKey;
-        try {
-            return advice(lockKey, cacheExecutorFactory.onValue(queryKey, slowQuery, updateExpire));
-        } catch (InterruptedException e) {
-            throw new ServerException("Redisson分布式锁被中断", e);
-        }
+        return advice(lockKey, cacheExecutorFactory.onValue(queryKey, slowQuery,typeReference, updateExpire));
     }
 
     public <T> T advice(
-            String lockKey, SingleCacheExecutor<T> cacheExecutor) throws InterruptedException {
+            String lockKey, SingleCacheExecutor<T> cacheExecutor) {
         // 击穿->数据有一瞬间失效, 一瞬间大量请求打击数据库
         // 穿透->假数据
         // 雪崩->随机过期时间
@@ -63,11 +61,16 @@ public class RedisCacheAdvice extends AbstractRedisCacheAdvice {
     }
 
     private <T> T synchronizedTransfer(
-            String lockKey, SingleCacheExecutor<T> cacheExecutor) throws InterruptedException {
+            String lockKey, SingleCacheExecutor<T> cacheExecutor)  {
         // 上分布式锁防止击穿
         RLock lock = redissonClient.getLock(lockKey);
         long waitTime = -1L;// 等待时间, 默认-1不等待
-        boolean trySucceed = lock.tryLock(waitTime, RedisConstants.LOCK_TTL, TimeUnit.SECONDS);
+        boolean trySucceed;
+        try {
+            trySucceed = lock.tryLock(waitTime, RedisConstants.LOCK_TTL, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new ServerException("Redisson分布式锁被中断, 应该不可能, 因为不等待", e);
+        }
         if (!trySucceed) {
             // 没有成功获取到锁
             return null;

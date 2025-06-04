@@ -16,6 +16,7 @@ spring:
       discovery:
         cluster-name: "FuZhou"
         namespace: 47c88cd1-8fcb-4922-ae8d-f67e979256bc
+
 dubbo:
   application:
     name: dubbo-${spring.application.name} # 需要唯一

@@ -5,11 +5,15 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.harvey.respiratory.cloud.api.service.SymptomaticPresentationDetailService;
 import org.harvey.respiratory.cloud.api.service.SymptomaticPresentationService;
 import org.harvey.respiratory.cloud.common.exception.BadRequestException;
 import org.harvey.respiratory.cloud.common.exception.UnauthorizedException;
+import org.harvey.respiratory.cloud.common.pojo.dto.SymptomaticPresentationDto;
 import org.harvey.respiratory.cloud.common.pojo.dto.UserDto;
 import org.harvey.respiratory.cloud.common.pojo.entity.SymptomaticPresentation;
+import org.harvey.respiratory.cloud.common.pojo.entity.SymptomaticPresentationDetail;
+import org.harvey.respiratory.cloud.common.pojo.enums.SymptomaticPresentationType;
 import org.harvey.respiratory.cloud.common.pojo.vo.NullPlaceholder;
 import org.harvey.respiratory.cloud.common.pojo.vo.Result;
 import org.harvey.respiratory.cloud.common.utils.UserHolder;
@@ -17,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 症状
@@ -32,7 +37,8 @@ import java.util.List;
 public class SymptomaticPresentationController {
     @Resource
     private SymptomaticPresentationService symptomaticPresentationService;
-
+    @Resource
+    private SymptomaticPresentationDetailService symptomaticPresentationDetailService;
     @DeleteMapping("/{id}")
     @ApiOperation("删除某一问诊的某一具体用药")
     public Result<NullPlaceholder> del(
@@ -70,14 +76,18 @@ public class SymptomaticPresentationController {
                 symptomaticPresentation
         ));
     }
-
+    @GetMapping("detail/{type}")
+    @ApiOperation("依据类型查询症状")
+    public Result<List<SymptomaticPresentationDetail>> queryDetailsByType(
+            @PathVariable("type") @ApiParam(value = "类型", required = true) SymptomaticPresentationType type) {
+        // 症状
+        return Result.success(symptomaticPresentationDetailService.queryByType(type));
+    }
     @GetMapping("visit/{id}")
     @ApiOperation("查询该问诊的有关症状")
-    public Result<List<SymptomaticPresentation>> queryVisitDrug(
+    public Result<List<SymptomaticPresentationDto>> queryVisitDrug(
             @PathVariable("id") @ApiParam(value = "问诊号", required = true) Long visitId) {
         // 查询未逻辑删除的
-        return Result.success(symptomaticPresentationService.selectByVisitId(visitId));
+        return Result.success(symptomaticPresentationService.selectDtoByVisitId(visitId));
     }
-
-
 }

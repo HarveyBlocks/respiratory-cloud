@@ -44,6 +44,6 @@ public class DaoException extends ServerException {
     }
 
     public enum Operation {
-        SELECT_NOTING, SAVE_FAIL, UPDATE_FAIL, DELETE_FAIL
+        SELECT_NOTHING,SELECT_CONFLICT, SAVE_FAIL, UPDATE_FAIL, FOREIGN_KEY, DELETE_FAIL
     }
 }

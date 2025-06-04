@@ -3,6 +3,7 @@ package org.harvey.respiratory.cloud.api.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import lombok.NonNull;
+import org.harvey.respiratory.cloud.common.pojo.dto.SymptomaticPresentationDto;
 import org.harvey.respiratory.cloud.common.pojo.entity.SymptomaticPresentation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,4 +52,5 @@ public interface SymptomaticPresentationService extends IService<SymptomaticPres
     @NonNull
     List<SymptomaticPresentation> selectByVisitId(long visitId);
 
+    List<SymptomaticPresentationDto> selectDtoByVisitId(Long visitId);
 }

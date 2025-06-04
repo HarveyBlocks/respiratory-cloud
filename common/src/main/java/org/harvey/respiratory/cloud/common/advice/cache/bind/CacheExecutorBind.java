@@ -1,5 +1,6 @@
 package org.harvey.respiratory.cloud.common.advice.cache.bind;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.harvey.respiratory.cloud.common.advice.cache.CacheSaveUnit;
@@ -33,8 +34,8 @@ public class CacheExecutorBind {
         return origin + randomUtil.uniform(-right, right);
     }
 
-    public <R> R toBean(String json) {
-        return jacksonUtil.toBean(json);
+    public <R> R toBean(String json, TypeReference<R> typeReference) {
+        return jacksonUtil.toBean(json, typeReference);
     }
 
     public ValueOperations<String, String> opsForValue() {

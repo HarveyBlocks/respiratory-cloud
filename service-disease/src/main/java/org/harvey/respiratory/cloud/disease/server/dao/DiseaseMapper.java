@@ -3,7 +3,12 @@ package org.harvey.respiratory.cloud.disease.server.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.harvey.respiratory.cloud.common.pojo.entity.Disease;
+import org.harvey.respiratory.cloud.common.pojo.vo.IntegerBasisPagePair;
+import org.harvey.respiratory.cloud.common.pojo.vo.PageRequest;
+
+import java.util.List;
 
 /**
  * 疾病
@@ -14,4 +19,5 @@ import org.harvey.respiratory.cloud.common.pojo.entity.Disease;
  */
 @Mapper
 public interface DiseaseMapper extends BaseMapper<Disease> {
+    List<IntegerBasisPagePair> selectIdsByPageBatch(@Param("requests") List<PageRequest> pageRequests);
 }
