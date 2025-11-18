@@ -74,14 +74,6 @@ Json的解析和构造采用Jackson, Jackson具有轻量级, API简单, 功能�
 -   View
 -   Controller
 
-![image-20250604003252247](C:/Users/27970/Desktop/README/image-20250604003252247.png)
-
-
-
-
-
-![image-20250604003137225](C:/Users/27970/Desktop/README/image-20250604003137225.png)
-
 
 
 ### 用户鉴权
